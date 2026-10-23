@@ -1,0 +1,44 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned host key of server107.web-hosting.com (port 21098)
+          echo '[server107.web-hosting.com]:21098 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIggDfLOh/YXdKv2wNdrU+rm7yw4VWetIZ9U2W1Wt8KQ' > ~/.ssh/known_hosts
+
+      - name: Deploy public/ to public_html
+        run: |
+          rsync -az --delete \
+            --exclude '.well-known/' \
+            --exclude 'cgi-bin/' \
+            --exclude 'nc_assets/' \
+            --exclude 'parking-page.shtml' \
+            -e "ssh -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            public/ moonmrys@server107.web-hosting.com:public_html/
+
+      - name: Smoke test
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://mooninn.pl/)
+          echo "https://mooninn.pl -> $code"
+          test "$code" = "200"
