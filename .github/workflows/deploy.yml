@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up SSH
         env:
@@ -29,6 +29,7 @@ jobs:
 
       - name: Deploy public/ to public_html
         run: |
+          echo "$GITHUB_SHA" > public/version.txt
           rsync -az --delete \
             --exclude '.well-known/' \
             --exclude 'cgi-bin/' \
@@ -36,9 +37,15 @@ jobs:
             --exclude 'parking-page.shtml' \
             -e "ssh -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
             public/ moonmrys@server107.web-hosting.com:public_html/
+          # rsync copies the mode of public/ onto public_html; cPanel expects 750
+          ssh -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes moonmrys@server107.web-hosting.com 'chmod 750 ~/public_html'
 
       - name: Smoke test
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' https://mooninn.pl/)
           echo "https://mooninn.pl -> $code"
           test "$code" = "200"
+          # the live site must serve this commit
+          live=$(curl -s "https://mooninn.pl/version.txt?t=$(date +%s)")
+          echo "live version: $live"
+          test "$live" = "$GITHUB_SHA"
