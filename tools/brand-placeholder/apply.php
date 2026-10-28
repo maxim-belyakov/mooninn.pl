@@ -25,16 +25,16 @@ echo "logo + favicon: ok\n";
 
 // Slides: reuse the 3 existing slide rows, replace image and texts per language
 $slides = [
-    // slide 1 shows a book cover, so it has an image per language edition
+    // every slide shows a book cover, so each has an image per language edition
     ['img' => 'slide-1.jpg', 'img_by_lang' => ['ru' => 'slide-1-ru.jpg', 'en' => 'slide-1-en.jpg'], 'url' => 'index.php?id_product=20&controller=product',
         'pl' => ['Księżycowy Zajazd', 'Przedsprzedaż pierwszego tomu już trwa'],
         'en' => ['The Moon Inn', 'Volume one is open for preorder'],
         'ru' => ['Лунный постоялый двор', 'Открыт предзаказ первого тома']],
-    ['img' => 'slide-2.jpg', 'url' => 'index.php?id_product=22&controller=product',
+    ['img' => 'slide-2.jpg', 'img_by_lang' => ['ru' => 'slide-2-ru.jpg', 'en' => 'slide-2-en.jpg'], 'url' => 'index.php?id_product=22&controller=product',
         'pl' => ['Ogród Lisów', 'Nowa seria w naszym katalogu'],
         'en' => ['The Fox Garden', 'A new series in our catalogue'],
         'ru' => ['Лисий сад', 'Новая серия в нашем каталоге']],
-    ['img' => 'slide-3.jpg', 'url' => 'index.php?id_category=10&controller=category',
+    ['img' => 'slide-3.jpg', 'img_by_lang' => ['ru' => 'slide-3-ru.jpg', 'en' => 'slide-3-en.jpg'], 'url' => 'index.php?id_category=10&controller=category',
         'pl' => ['Manhwa po polsku', 'Koreańskie komiksy w starannych polskich wydaniach'],
         'en' => ['Manhwa in Polish', 'Korean comics in careful Polish editions'],
         'ru' => ['Манхва на польском', 'Корейские комиксы в аккуратных польских изданиях']],
@@ -59,11 +59,15 @@ foreach ($slides as $i => $s) {
     }
     echo "slide $id: {$s['img']}\n";
 }
-// Home banner: one text-free image for all languages; the text is the
-// per-language description ("Title | Subtitle"), drawn by the theme template
+// Home banner: text-free image (per language because it shows covers); the text
+// is the per-language description ("Title | Subtitle"), drawn by the theme template
 $bannerDir = _PS_MODULE_DIR_ . 'ps_banner/img/';
-if (!copy("$srcDir/banner-bg.jpg", $bannerDir . 'banner-bg.jpg')) { fwrite(STDERR, "copy failed: banner-bg.jpg\n"); exit(1); }
-chmod($bannerDir . 'banner-bg.jpg', 0644);
+// the banner shows covers too, so the picture is per language (text stays HTML)
+$bannerImg = ['pl' => 'banner-bg.jpg', 'ru' => 'banner-bg-ru.jpg', 'en' => 'banner-bg-en.jpg'];
+foreach ($bannerImg as $file) {
+    if (!copy("$srcDir/$file", $bannerDir . $file)) { fwrite(STDERR, "copy failed: $file\n"); exit(1); }
+    chmod($bannerDir . $file, 0644);
+}
 $img = $link = $desc = [];
 $bannerText = [
     'pl' => 'Przedsprzedaż już trwa | Zamów teraz, wyślemy pierwsze tomy w kwietniu 2027',
@@ -71,7 +75,7 @@ $bannerText = [
     'ru' => 'Предзаказ открыт | Закажите сейчас, первые тома отправим в апреле 2027',
 ];
 foreach ($langs as $iso => $idLang) {
-    $img[$idLang] = 'banner-bg.jpg';
+    $img[$idLang] = $bannerImg[$iso] ?? $bannerImg['pl'];
     $link[$idLang] = Context::getContext()->link->getPageLink('new-products', true, $idLang);
     $desc[$idLang] = $bannerText[$iso] ?? $bannerText['pl'];
 }
