@@ -16,6 +16,12 @@ assets:
         path: assets/css/custom.css
         media: all
         priority: 1000
+  js:
+    all:
+      - id: mooninn-editions
+        path: assets/js/editions.js
+        priority: 1000
+        position: bottom
 
 meta:
   compatibility:
