@@ -42,11 +42,13 @@ jobs:
           # themes/.htaccess only serves assets, so the version marker is a .css file
           echo "/* $GITHUB_SHA */" > theme/version.css
           # --delete is scoped to themes/mooninn only
-          rsync -rlz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+          # assets/cache holds PrestaShop's combined CSS/JS; it is not in git, keep it out of --delete
+          rsync -rlz --delete --exclude 'assets/cache/' --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
             -e "ssh $SSH_OPTS" \
             theme/ "$SSH_TARGET:public_html/themes/mooninn/"
           # Drop compiled templates and the Symfony cache so changes show up at once
-          ssh $SSH_OPTS "$SSH_TARGET" 'rm -rf ~/public_html/var/cache/prod/smarty/compile/* ~/public_html/var/cache/prod/smarty/cache/*'
+          # and drop the combined CSS/JS so it is rebuilt from the new files
+          ssh $SSH_OPTS "$SSH_TARGET" 'rm -rf ~/public_html/var/cache/prod/smarty/compile/* ~/public_html/var/cache/prod/smarty/cache/* ~/public_html/themes/mooninn/assets/cache/*.css ~/public_html/themes/mooninn/assets/cache/*.js'
 
       - name: Smoke test
         run: |
