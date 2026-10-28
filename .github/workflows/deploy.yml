@@ -1,9 +1,9 @@
 name: Deploy to Namecheap
 
+# Paused 28.10.2026: public_html now hosts PrestaShop, and rsync --delete
+# would wipe it. This workflow will be rewritten to deploy only the shop
+# theme (themes/mooninn). Until then it runs only by hand and refuses to deploy.
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 concurrency:
@@ -14,6 +14,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Refuse while paused
+        run: |
+          echo "Deploy is paused: public_html now hosts PrestaShop. See the comment at the top of this file."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v5
 
