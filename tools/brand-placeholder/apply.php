@@ -56,15 +56,19 @@ foreach ($slides as $i => $s) {
     }
     echo "slide $id: {$s['img']}\n";
 }
-// Home banner: one image per language (ps_banner stores BANNER_IMG per language)
+// Home banner: one text-free image for all languages; the text is the
+// per-language description ("Title | Subtitle"), drawn by the theme template
 $bannerDir = _PS_MODULE_DIR_ . 'ps_banner/img/';
+if (!copy("$srcDir/banner-bg.jpg", $bannerDir . 'banner-bg.jpg')) { fwrite(STDERR, "copy failed: banner-bg.jpg\n"); exit(1); }
+chmod($bannerDir . 'banner-bg.jpg', 0644);
 $img = $link = $desc = [];
-$bannerText = ['pl' => 'Przedsprzedaż już trwa', 'en' => 'Preorders are open', 'ru' => 'Предзаказ открыт'];
+$bannerText = [
+    'pl' => 'Przedsprzedaż już trwa | Zamów teraz, wyślemy pierwsze tomy w kwietniu 2027',
+    'en' => 'Preorders are open | Order now, first volumes ship in April 2027',
+    'ru' => 'Предзаказ открыт | Закажите сейчас, первые тома отправим в апреле 2027',
+];
 foreach ($langs as $iso => $idLang) {
-    $file = 'banner-' . (isset($bannerText[$iso]) ? $iso : 'pl') . '.jpg';
-    if (!copy("$srcDir/$file", $bannerDir . $file)) { fwrite(STDERR, "copy failed: $file\n"); exit(1); }
-    chmod($bannerDir . $file, 0644);
-    $img[$idLang] = $file;
+    $img[$idLang] = 'banner-bg.jpg';
     $link[$idLang] = Context::getContext()->link->getPageLink('new-products', true, $idLang);
     $desc[$idLang] = $bannerText[$iso] ?? $bannerText['pl'];
 }
