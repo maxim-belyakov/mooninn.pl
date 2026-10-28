@@ -56,5 +56,22 @@ foreach ($slides as $i => $s) {
     }
     echo "slide $id: {$s['img']}\n";
 }
+// Home banner: one image per language (ps_banner stores BANNER_IMG per language)
+$bannerDir = _PS_MODULE_DIR_ . 'ps_banner/img/';
+$img = $link = $desc = [];
+$bannerText = ['pl' => 'Przedsprzedaż już trwa', 'en' => 'Preorders are open', 'ru' => 'Предзаказ открыт'];
+foreach ($langs as $iso => $idLang) {
+    $file = 'banner-' . (isset($bannerText[$iso]) ? $iso : 'pl') . '.jpg';
+    if (!copy("$srcDir/$file", $bannerDir . $file)) { fwrite(STDERR, "copy failed: $file\n"); exit(1); }
+    chmod($bannerDir . $file, 0644);
+    $img[$idLang] = $file;
+    $link[$idLang] = Context::getContext()->link->getPageLink('new-products', true, $idLang);
+    $desc[$idLang] = $bannerText[$iso] ?? $bannerText['pl'];
+}
+Configuration::updateValue('BANNER_IMG', $img);
+Configuration::updateValue('BANNER_LINK', $link);
+Configuration::updateValue('BANNER_DESC', $desc);
+echo "banner: " . json_encode($img) . "\n";
+
 Tools::clearSmartyCache();
 echo "done\n";
