@@ -1,24 +1,29 @@
-name: Deploy to Namecheap
+name: Deploy theme to Namecheap
 
-# Paused 28.10.2026: public_html now hosts PrestaShop, and rsync --delete
-# would wipe it. This workflow will be rewritten to deploy only the shop
-# theme (themes/mooninn). Until then it runs only by hand and refuses to deploy.
+# Push to master deploys theme/ (the Mooninn child theme of Hummingbird) to
+# public_html/themes/mooninn. Nothing else on the server is touched: the shop,
+# its database and uploads live only on the server.
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'theme/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+env:
+  SSH_TARGET: moonmrys@server107.web-hosting.com
+  SSH_OPTS: -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Refuse while paused
-        run: |
-          echo "Deploy is paused: public_html now hosts PrestaShop. See the comment at the top of this file."
-          exit 1
-
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -32,25 +37,22 @@ jobs:
           # Pinned host key of server107.web-hosting.com (port 21098)
           echo '[server107.web-hosting.com]:21098 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIggDfLOh/YXdKv2wNdrU+rm7yw4VWetIZ9U2W1Wt8KQ' > ~/.ssh/known_hosts
 
-      - name: Deploy public/ to public_html
+      - name: Deploy theme
         run: |
-          echo "$GITHUB_SHA" > public/version.txt
-          rsync -az --delete \
-            --exclude '.well-known/' \
-            --exclude 'cgi-bin/' \
-            --exclude 'nc_assets/' \
-            --exclude 'parking-page.shtml' \
-            -e "ssh -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
-            public/ moonmrys@server107.web-hosting.com:public_html/
-          # rsync copies the mode of public/ onto public_html; cPanel expects 750
-          ssh -i ~/.ssh/deploy_key -p 21098 -o IdentitiesOnly=yes moonmrys@server107.web-hosting.com 'chmod 750 ~/public_html'
+          echo "$GITHUB_SHA" > theme/version.txt
+          # --delete is scoped to themes/mooninn only
+          rsync -rlz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+            -e "ssh $SSH_OPTS" \
+            theme/ "$SSH_TARGET:public_html/themes/mooninn/"
+          # Drop compiled templates and the Symfony cache so changes show up at once
+          ssh $SSH_OPTS "$SSH_TARGET" 'rm -rf ~/public_html/var/cache/prod/smarty/compile/* ~/public_html/var/cache/prod/smarty/cache/*'
 
       - name: Smoke test
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' https://mooninn.pl/)
-          echo "https://mooninn.pl -> $code"
-          test "$code" = "200"
-          # the live site must serve this commit
-          live=$(curl -s "https://mooninn.pl/version.txt?t=$(date +%s)")
-          echo "live version: $live"
+          # The shop is in maintenance mode (503 for visitors), so check the theme file directly
+          live=$(curl -s "https://mooninn.pl/themes/mooninn/version.txt?t=$(date +%s)")
+          echo "live theme version: $live"
           test "$live" = "$GITHUB_SHA"
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://mooninn.pl/themes/mooninn/assets/css/custom.css)
+          echo "custom.css -> $code"
+          test "$code" = "200"

@@ -1,0 +1,22 @@
+/*
+ * Mooninn theme overrides on top of Hummingbird.
+ * Edit here: every push to master deploys theme/ to https://mooninn.pl.
+ * Colours and fonts are placeholders until the brand book arrives.
+ */
+:root {
+  --mooninn-ink: #14161f;
+  --mooninn-moon: #f1ead8;
+  --mooninn-accent: #5c3a78;
+}
+
+/* Book covers are 2:3: never crop them in listings or on the product page */
+.product-miniature img,
+.product__images img,
+.product-cover img {
+  object-fit: contain;
+}
+
+.product-flags .badge,
+.product-flag {
+  background-color: var(--mooninn-accent);
+}

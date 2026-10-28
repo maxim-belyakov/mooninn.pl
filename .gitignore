@@ -1,7 +1,8 @@
+*.key
+*.pem
 .DS_Store
-node_modules/
 .env
 .env.*
-*.pem
-*.key
+node_modules/
 public/version.txt
+theme/version.txt
