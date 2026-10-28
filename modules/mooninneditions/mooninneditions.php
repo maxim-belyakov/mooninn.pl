@@ -73,13 +73,15 @@ class MooninnEditions extends Module
         if (!$idImage) {
             return;
         }
-        foreach ((array) $presented['images'] as $image) {
-            if ((int) $image['id_image'] === $idImage) {
-                $presented['cover'] = $image;
-                $presented['default_image'] = $image;
-
-                return;
-            }
+        // listings only carry the default combination's images, so build the edition image
+        $retriever = new \PrestaShop\PrestaShop\Adapter\Image\ImageRetriever($this->context->link);
+        $image = $retriever->getImage(new Product($idProduct, false, $this->context->language->id), $idImage);
+        if (empty($image)) {
+            return;
         }
+        $image['cover'] = 1;
+        $image['id_image'] = $idImage;
+        $presented['cover'] = $image;
+        $presented['default_image'] = $image;
     }
 }
