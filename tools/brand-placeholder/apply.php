@@ -25,7 +25,8 @@ echo "logo + favicon: ok\n";
 
 // Slides: reuse the 3 existing slide rows, replace image and texts per language
 $slides = [
-    ['img' => 'slide-1.jpg', 'url' => 'index.php?id_product=20&controller=product',
+    // slide 1 shows a book cover, so it has an image per language edition
+    ['img' => 'slide-1.jpg', 'img_by_lang' => ['ru' => 'slide-1-ru.jpg', 'en' => 'slide-1-en.jpg'], 'url' => 'index.php?id_product=20&controller=product',
         'pl' => ['Księżycowy Zajazd', 'Przedsprzedaż pierwszego tomu już trwa'],
         'en' => ['The Moon Inn', 'Volume one is open for preorder'],
         'ru' => ['Лунный постоялый двор', 'Открыт предзаказ первого тома']],
@@ -41,8 +42,10 @@ $slides = [
 $ids = array_column($db->executeS('SELECT id_homeslider_slides FROM ' . _DB_PREFIX_ . 'homeslider_slides ORDER BY position'), 'id_homeslider_slides');
 $imgDir = _PS_MODULE_DIR_ . 'ps_imageslider/images/';
 foreach ($slides as $i => $s) {
-    if (!copy("$srcDir/{$s['img']}", $imgDir . $s['img'])) { fwrite(STDERR, "copy failed: {$s['img']}\n"); exit(1); }
-    chmod($imgDir . $s['img'], 0644);
+    foreach (array_merge([$s['img']], array_values($s['img_by_lang'] ?? [])) as $file) {
+        if (!copy("$srcDir/$file", $imgDir . $file)) { fwrite(STDERR, "copy failed: $file\n"); exit(1); }
+        chmod($imgDir . $file, 0644);
+    }
     $id = (int) $ids[$i];
     foreach ($langs as $iso => $idLang) {
         [$title, $desc] = $s[$iso] ?? $s['pl'];
@@ -51,7 +54,7 @@ foreach ($slides as $i => $s) {
             'legend' => pSQL($title),
             'description' => pSQL('<p>' . $desc . '</p>', true),
             'url' => pSQL($s['url']),
-            'image' => pSQL($s['img']),
+            'image' => pSQL($s['img_by_lang'][$iso] ?? $s['img']),
         ], 'id_homeslider_slides = ' . $id . ' AND id_lang = ' . (int) $idLang);
     }
     echo "slide $id: {$s['img']}\n";
