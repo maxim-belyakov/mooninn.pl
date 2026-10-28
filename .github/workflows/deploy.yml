@@ -49,6 +49,8 @@ jobs:
           # Drop compiled templates and the Symfony cache so changes show up at once
           # and drop the combined CSS/JS so it is rebuilt from the new files
           ssh $SSH_OPTS "$SSH_TARGET" 'rm -rf ~/public_html/var/cache/prod/smarty/compile/* ~/public_html/var/cache/prod/smarty/cache/* ~/public_html/themes/mooninn/assets/cache/*.css ~/public_html/themes/mooninn/assets/cache/*.js'
+          # Browsers cache combined files for a week by name; bump PrestaShop's CCC versions so the names change
+          ssh $SSH_OPTS "$SSH_TARGET" 'cd ~/public_html && php -r "require \"config/config.inc.php\"; foreach ([\"PS_CCCCSS_VERSION\", \"PS_CCCJS_VERSION\"] as \$k) { Configuration::updateValue(\$k, (int) Configuration::get(\$k) + 1); }" 2>/dev/null'
 
       - name: Smoke test
         run: |
