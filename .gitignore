@@ -5,4 +5,4 @@
 .env.*
 node_modules/
 public/version.txt
-theme/version.txt
+theme/version.css

@@ -39,7 +39,8 @@ jobs:
 
       - name: Deploy theme
         run: |
-          echo "$GITHUB_SHA" > theme/version.txt
+          # themes/.htaccess only serves assets, so the version marker is a .css file
+          echo "/* $GITHUB_SHA */" > theme/version.css
           # --delete is scoped to themes/mooninn only
           rsync -rlz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
             -e "ssh $SSH_OPTS" \
@@ -50,9 +51,9 @@ jobs:
       - name: Smoke test
         run: |
           # The shop is in maintenance mode (503 for visitors), so check the theme file directly
-          live=$(curl -s "https://mooninn.pl/themes/mooninn/version.txt?t=$(date +%s)")
+          live=$(curl -s "https://mooninn.pl/themes/mooninn/version.css?t=$(date +%s)")
           echo "live theme version: $live"
-          test "$live" = "$GITHUB_SHA"
+          test "$live" = "/* $GITHUB_SHA */"
           code=$(curl -s -o /dev/null -w '%{http_code}' https://mooninn.pl/themes/mooninn/assets/css/custom.css)
           echo "custom.css -> $code"
           test "$code" = "200"
