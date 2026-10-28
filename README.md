@@ -5,6 +5,7 @@ Sklep wydawnictwa Mooninn na PrestaShop 9.2. Live: https://mooninn.pl (na razie 
 ## Co jest w repozytorium
 
 - `theme/` - motyw `mooninn` (motyw potomny Hummingbird). Tu zmieniamy wygląd: `theme/assets/css/custom.css`, a szablony z Hummingbird kopiujemy do `theme/templates/...` tylko wtedy, gdy trzeba je zmienić.
+- `modules/` - nasze moduły PrestaShop (`mooninneditions`: wydania językowe książek). Deploy je kopiuje, nowy moduł trzeba raz zainstalować w panelu.
 - `tools/demo-catalog/` - skrypt i okładki demonstracyjnego katalogu (5 wymyślonych tomów).
 
 Produkty, kategorie, zamówienia i strony CMS są w panelu PrestaShop, nie w repozytorium.

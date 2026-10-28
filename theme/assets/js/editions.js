@@ -7,10 +7,10 @@
  * site language. If the book has no such edition, the default combination
  * (Polish) stays selected.
  *
- * Ids come from tools/demo-catalog/editions.php (attribute group and values).
+ * The language -> attribute map comes from the mooninneditions module
+ * (window.mooninnEditions, set from the MOONINN_EDITIONS configuration).
  */
 (function () {
-  var EDITIONS = { group: 5, values: { pl: 26, ru: 27, en: 28 } };
 
   function explicitCombination() {
     // /20-41-slug.html or #/27-wydanie-rosyjskie mean the visitor chose an edition already
@@ -18,7 +18,8 @@
   }
 
   function pickEdition() {
-    if (typeof prestashop === 'undefined' || explicitCombination()) { return; }
+    var EDITIONS = window.mooninnEditions;
+    if (typeof prestashop === 'undefined' || !EDITIONS || !EDITIONS.group || explicitCombination()) { return; }
     var select = document.querySelector('select[data-product-attribute="' + EDITIONS.group + '"]');
     if (!select) { return; }
     var wanted = EDITIONS.values[prestashop.language && prestashop.language.iso_code];

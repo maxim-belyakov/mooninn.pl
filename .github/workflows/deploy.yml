@@ -1,14 +1,16 @@
-name: Deploy theme to Namecheap
+name: Deploy theme and modules to Namecheap
 
 # Push to master deploys theme/ (the Mooninn child theme of Hummingbird) to
-# public_html/themes/mooninn. Nothing else on the server is touched: the shop,
-# its database and uploads live only on the server.
+# public_html/themes/mooninn and every folder in modules/ to public_html/modules.
+# Nothing else on the server is touched: the shop, its database and uploads live
+# only on the server. A new module still has to be installed once in the admin.
 on:
   push:
     branches:
       - master
     paths:
       - 'theme/**'
+      - 'modules/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -46,6 +48,11 @@ jobs:
           rsync -rlz --delete --exclude 'assets/cache/' --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
             -e "ssh $SSH_OPTS" \
             theme/ "$SSH_TARGET:public_html/themes/mooninn/"
+          # Our own modules: each folder in modules/ is synced to public_html/modules/<name>
+          for m in modules/*/; do
+            name=$(basename "$m")
+            rsync -rlz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r -e "ssh $SSH_OPTS" "$m" "$SSH_TARGET:public_html/modules/$name/"
+          done
           # Drop compiled templates and the Symfony cache so changes show up at once
           # and drop the combined CSS/JS so it is rebuilt from the new files
           ssh $SSH_OPTS "$SSH_TARGET" 'rm -rf ~/public_html/var/cache/prod/smarty/compile/* ~/public_html/var/cache/prod/smarty/cache/* ~/public_html/themes/mooninn/assets/cache/*.css ~/public_html/themes/mooninn/assets/cache/*.js'
