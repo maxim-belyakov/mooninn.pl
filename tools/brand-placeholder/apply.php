@@ -4,7 +4,8 @@
  * Run from public_html: php ~/apply.php ~/brand-placeholder
  */
 if (PHP_SAPI !== 'cli') { exit(1); }
-$dir = rtrim($argv[1] ?? '', '/');
+// not $dir: config.inc.php overwrites a global with that name
+$srcDir = rtrim($argv[1] ?? '', '/');
 require getcwd() . '/config/config.inc.php';
 $ctx = Context::getContext();
 $ctx->shop = new Shop((int) Configuration::get('PS_SHOP_DEFAULT'));
@@ -14,9 +15,11 @@ $langs = [];
 foreach (Language::getLanguages(false) as $l) { $langs[$l['iso_code']] = (int) $l['id_lang']; }
 
 // Logo and favicon
-copy("$dir/mooninn-logo.png", _PS_IMG_DIR_ . 'mooninn-logo.png');
+foreach ([["$srcDir/mooninn-logo.png", _PS_IMG_DIR_ . 'mooninn-logo.png'], ["$srcDir/favicon.ico", _PS_IMG_DIR_ . 'favicon.ico']] as [$from, $to]) {
+    if (!copy($from, $to)) { fwrite(STDERR, "copy failed: $from\n"); exit(1); }
+    chmod($to, 0644);
+}
 Configuration::updateValue('PS_LOGO', 'mooninn-logo.png');
-copy("$dir/favicon.ico", _PS_IMG_DIR_ . 'favicon.ico');
 Configuration::updateValue('PS_FAVICON', 'favicon.ico');
 echo "logo + favicon: ok\n";
 
@@ -38,7 +41,8 @@ $slides = [
 $ids = array_column($db->executeS('SELECT id_homeslider_slides FROM ' . _DB_PREFIX_ . 'homeslider_slides ORDER BY position'), 'id_homeslider_slides');
 $imgDir = _PS_MODULE_DIR_ . 'ps_imageslider/images/';
 foreach ($slides as $i => $s) {
-    copy("$dir/{$s['img']}", $imgDir . $s['img']);
+    if (!copy("$srcDir/{$s['img']}", $imgDir . $s['img'])) { fwrite(STDERR, "copy failed: {$s['img']}\n"); exit(1); }
+    chmod($imgDir . $s['img'], 0644);
     $id = (int) $ids[$i];
     foreach ($langs as $iso => $idLang) {
         [$title, $desc] = $s[$iso] ?? $s['pl'];
