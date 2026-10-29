@@ -82,6 +82,8 @@ class MooninnUrls extends Module
                 $keywords['rewrite'] = ['regexp' => self::SLUG, 'param' => 'rewrite'];
                 $dispatcher->removeRoute($name, $idLang, $idShop);
                 $dispatcher->addRoute($name, $rule, $controllers[$kind], $idLang, $keywords, ['mooninn_kind' => $kind], $idShop);
+                // without this, createUrl() would append ?id=... for keywords missing from the rule
+                MooninnUrlsRoutes::hideKeywords($dispatcher, $idShop, $idLang, $name, ['id', 'id_product_attribute']);
             }
         }
     }
@@ -139,5 +141,22 @@ class MooninnUrls extends Module
         }
 
         return 0;
+    }
+}
+
+/**
+ * Dispatcher::$routes is protected; a subclass may edit it on any Dispatcher instance.
+ */
+class MooninnUrlsRoutes extends Dispatcher
+{
+    public static function hideKeywords(Dispatcher $dispatcher, int $idShop, int $idLang, string $name, array $keys): void
+    {
+        foreach ($keys as $key) {
+            if (isset($dispatcher->routes[$idShop][$idLang][$name]) && !isset($dispatcher->routes[$idShop][$idLang][$name]['keywords'][$key])) {
+                $dispatcher->routes[$idShop][$idLang][$name]['keywords'][$key] = [
+                    'regexp' => '', 'param' => null, 'required' => false, 'prepend' => '', 'append' => '',
+                ];
+            }
+        }
     }
 }
