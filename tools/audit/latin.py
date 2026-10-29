@@ -3,7 +3,7 @@ import json, re, sys, urllib.request, collections
 sys.path.insert(0, ".")
 from crawl import P, get
 r = json.load(open("/tmp/mooninn-audit.json"))
-extra = {"ru": ["koszyk?action=show", "zamowienie", "logowanie", "rejestracja", "odzyskiwanie-hasla", "moje-konto"],
+extra = {"ru": ["cart?action=show", "order", "login", "registration", "password-recovery", "my-account"],
          "en": ["cart?action=show", "order", "login", "registration", "password-recovery", "my-account"]}
 OK = re.compile(r"^(Mooninn|MOONINN|DEMO|ISBN.*|[\d\s.,:/%+\-()zł€$x×]+|PL|EN|RU|Polski|English|Русский|E-mail|Email|BLIK|InPost|Facebook|Instagram|contact@mooninn\.pl|Seo Ha-eun|Mira Kowal|Yun Ji-ho|Anna Lis|DEMO-0\d|[A-Z]{2,4}|Manga|Manhwa)$")
 for lang in ("ru", "en"):

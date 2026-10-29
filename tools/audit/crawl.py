@@ -28,7 +28,8 @@ def get(u):
 def main():
     report = {}
     for lang in LANGS:
-        seen = set(); queue = [f"{BASE}/{lang}/"]; pages = {}
+        root = f"{BASE}/" if lang == "pl" else f"{BASE}/{lang}/"  # default language has no prefix
+        seen = set(); queue = [root]; pages = {}
         while queue and len(seen) < 150:
             u = queue.pop(0).split("#")[0]
             if u in seen: continue
@@ -42,7 +43,7 @@ def main():
             for l in p.links:
                 l = html.unescape(l).split("#")[0]
                 if l.startswith("/"): l = BASE + l
-                if l.startswith(f"{BASE}/{lang}/") and not re.search(r"(\?|\.(jpg|png|webp|css|js)$|/(module|cart|order|login|password|my-account|identity|logout))", l):
+                if l.startswith(root) and not re.match(r"https://mooninn.pl/(en|ru|ar)/", l if lang == "pl" else "") and not re.search(r"(\?|\.(jpg|png|webp|css|js)$|/(module|cart|order|login|password|my-account|identity|logout))", l):
                     if l not in seen: queue.append(l)
         report[lang] = pages
     json.dump(report, sys.stdout, ensure_ascii=False, indent=1)
