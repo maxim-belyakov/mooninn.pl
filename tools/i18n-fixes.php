@@ -85,7 +85,7 @@ foreach ($strings as [$domain, $key, $pl, $ru]) {
 }
 echo "interface strings: $n rows\n";
 
-// 2. CMS pages (titles, meta, slugs); bodies stay placeholders until real texts arrive
+// 2. CMS pages (titles, meta; slugs stay English, see i18n-urls.php); bodies stay placeholders until real texts arrive
 $cms = [
     'About us' => ['O nas', 'О нас'],
     'Delivery' => ['Dostawa', 'Доставка'],
@@ -98,7 +98,7 @@ foreach ($db->executeS("SELECT id_cms, meta_title FROM {$P}cms_lang WHERE id_lan
     if (!isset($cms[$r['meta_title']])) { continue; }
     [$pl, $ru] = $cms[$r['meta_title']];
     foreach (['pl' => $pl, 'ru' => $ru] as $iso => $t) {
-        $db->update('cms_lang', ['meta_title' => pSQL($t), 'head_seo_title' => pSQL($t), 'meta_description' => '', 'link_rewrite' => pSQL(Tools::str2url($t))],
+        $db->update('cms_lang', ['meta_title' => pSQL($t), 'head_seo_title' => pSQL($t), 'meta_description' => ''],
             "id_cms = {$r['id_cms']} AND id_lang = {$L[$iso]}");
     }
 }

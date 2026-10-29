@@ -27,10 +27,11 @@ function ml(array $t, array $langs): array {
     foreach ($langs as $iso => $id) { $out[$id] = $t[$iso] ?? $t['pl']; }
     return $out;
 }
+// URLs use the English name in every language (see tools/i18n-urls.php)
 function slugs(array $names): array {
-    $out = [];
-    foreach ($names as $id => $n) { $out[$id] = Tools::str2url($n); }
-    return $out;
+    $en = (int) Language::getIdByIso('en');
+    $slug = Tools::str2url($names[$en] ?? reset($names));
+    return array_fill_keys(array_keys($names), $slug);
 }
 
 // 1. Maintenance text
